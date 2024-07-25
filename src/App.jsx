@@ -28,25 +28,36 @@ function App() {
   const [activeCourses, setActiveCourses] = useState([]);
   const [activeCountries, setActiveCountries] = useState([]);
 
-  const handleClick = (country) => {
-    if (activeCountries.includes(country)) {
-      setActiveCountries(activeCountries.filter((c) => c !== country));
-    } else {
-      setActiveCountries([...activeCountries, country]);
-    }
-  };
-
   useEffect(() => {
-    setFilteredData(
-      data.filter((datum) => activeCountries.includes(datum.studio_country)),
-    );
-  }, [activeCountries]);
+    if (activeCourses.length === 0) {
+      setFilteredData(
+        data.filter((datum) => activeCountries.includes(datum.studio_country)),
+      );
+    }
+    if (activeCountries.length === 0) {
+      setFilteredData(
+        data.filter((datum) => activeCourses.includes(datum.program_name)),
+      );
+    }
+    if (activeCourses.length > 0 && activeCountries.length > 0) {
+      setFilteredData(
+        data
+          .filter(
+            (datum) =>
+              activeCourses.includes(datum.program_name) &&
+              activeCountries.includes(datum.studio_country),
+          )
+          .sort((a, b) => (a.studio_country < b.studio_country ? -1 : 1)),
+      );
+    }
+  }, [activeCountries, activeCourses]);
 
   return (
     <>
       <h1>BASI Teacher Training Courses</h1>
+
       <h2>Filter by course</h2>
-      <div className="card">
+      <div>
         {courses.map((course) => (
           <button
             key={course}
@@ -65,12 +76,18 @@ function App() {
       </div>
 
       <h2>Filter by country</h2>
-      <div className="card">
+      <div>
         {countries.map((country) => (
           <button
             key={country}
             className={activeCountries.includes(country) ? "active" : undefined}
-            onClick={() => handleClick(country)}
+            onClick={() =>
+              setActiveCountries(
+                activeCountries.includes(country)
+                  ? activeCountries.filter((c) => c !== country)
+                  : [...activeCountries, country],
+              )
+            }
           >
             {country}
           </button>
@@ -79,8 +96,11 @@ function App() {
       <h2>Number of studios: {filteredData.length}</h2>
 
       {filteredData.map((datum) => (
-        <div key={datum.studio_name} className="card">
+        <div key={datum.course_id} className="card">
           <h3>{datum.studio_name}</h3>
+          <p>
+            <em>{datum.program_name}</em>
+          </p>
           <p>{datum.studio_city}</p>
           <p>{datum.studio_country}</p>
           <details>
