@@ -54,8 +54,12 @@ function App() {
 
   return (
     <>
-      <h1>BASI Teacher Training Courses</h1>
+      <h1>BASI Pilates Teacher Training Courses</h1>
 
+      <p>
+        This is an unofficial directory of BASI teacher training studios. This
+        may be outdated. Data retrieved 26 July 2024.
+      </p>
       <h2>Filter by course</h2>
       <div>
         {courses.map((course) => (
