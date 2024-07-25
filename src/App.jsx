@@ -36,7 +36,9 @@ function App() {
     }
     if (activeCountries.length === 0) {
       setFilteredData(
-        data.filter((datum) => activeCourses.includes(datum.program_name)),
+        data
+          .filter((datum) => activeCourses.includes(datum.program_name))
+          .sort((a, b) => (a.studio_country < b.studio_country ? -1 : 1)),
       );
     }
     if (activeCourses.length > 0 && activeCountries.length > 0) {
