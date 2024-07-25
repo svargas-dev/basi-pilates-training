@@ -3,23 +3,29 @@ import allData from "./assets/data.json";
 
 import "./App.css";
 
-const data = allData["0"].filter(
-  (datum) =>
-    datum.program_name.toLowerCase().includes("comprehensive global") &&
-    datum.program_type === "Teacher Training" &&
-    datum.studio_country !== "United States of America" &&
-    datum.studio_country !== "Russian Federation",
-);
+const data = allData["0"];
 
-const countries = data.reduce((acc, datum) => {
-  if (!acc.includes(datum.studio_country)) {
-    acc.push(datum.studio_country);
-  }
-  return acc;
-}, []);
+const courses = data
+  .reduce((acc, datum) => {
+    if (!acc.includes(datum.program_name)) {
+      acc.push(datum.program_name);
+    }
+    return acc;
+  }, [])
+  .sort();
+
+const countries = data
+  .reduce((acc, datum) => {
+    if (!acc.includes(datum.studio_country)) {
+      acc.push(datum.studio_country);
+    }
+    return acc;
+  }, [])
+  .sort();
 
 function App() {
   const [filteredData, setFilteredData] = useState(data);
+  const [activeCourses, setActiveCourses] = useState([]);
   const [activeCountries, setActiveCountries] = useState([]);
 
   const handleClick = (country) => {
@@ -38,7 +44,27 @@ function App() {
 
   return (
     <>
-      <h1>Basi Training</h1>
+      <h1>BASI Teacher Training Courses</h1>
+      <h2>Filter by course</h2>
+      <div className="card">
+        {courses.map((course) => (
+          <button
+            key={course}
+            className={activeCourses.includes(course) ? "active" : undefined}
+            onClick={() =>
+              setActiveCourses(
+                activeCourses.includes(course)
+                  ? activeCourses.filter((c) => c !== course)
+                  : [...activeCourses, course],
+              )
+            }
+          >
+            {course}
+          </button>
+        ))}
+      </div>
+
+      <h2>Filter by country</h2>
       <div className="card">
         {countries.map((country) => (
           <button
@@ -65,10 +91,6 @@ function App() {
           </details>
         </div>
       ))}
-
-      {/* <code> */}
-      {/*   <pre> {JSON.stringify(filteredData, null, 4)}</pre> */}
-      {/* </code> */}
     </>
   );
 }
