@@ -112,7 +112,7 @@ function App() {
           <details>
             <summary>See all info</summary>
             <code>
-              <pre>{JSON.stringify(datum, null, 4)}</pre>
+              <pre>{JSON.stringify(cleanDatum(datum), null, 4)}</pre>
             </code>
           </details>
         </div>
@@ -120,5 +120,47 @@ function App() {
     </>
   );
 }
+
+const cleanDatum = (datum) => {
+  delete datum.course_id;
+  delete datum.licensee;
+  delete datum.licensee_user;
+  delete datum.program_id;
+  delete datum.studio_id;
+  delete datum.studio_friendly_id;
+  delete datum.friendly_id;
+  delete datum.register_url;
+  datum.modules = datum.modules
+    .filter((module) => {
+      const start = new Date(module.start);
+      const now = new Date();
+      return start >= now;
+    })
+    .map((module) => {
+      delete module.qualifications;
+      return module;
+    });
+  datum.faculty = datum.faculty.filter((faculty) => {
+    delete faculty.city;
+    delete faculty.locality;
+    if (faculty.deleted === false) {
+      delete faculty.deleted;
+    }
+    delete faculty.country;
+    delete faculty.postal_code;
+    delete faculty.user;
+    delete faculty.address;
+    delete faculty.id;
+    delete faculty.qualifications;
+    delete faculty.title;
+    if (faculty.active === true) {
+      delete faculty.active;
+    }
+
+    return faculty;
+  });
+
+  return datum;
+};
 
 export default App;
