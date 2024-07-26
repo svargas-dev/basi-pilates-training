@@ -11,6 +11,11 @@
   margin: 1rem;
 }
 
+.inactive {
+  opacity: 0.8;
+  transition: opacity 0.3s;
+}
+
 .active {
   border-color: red;
   box-shadow: 0 0 1rem rgba(0, 0, 0, 0.1);

@@ -67,7 +67,7 @@ function App() {
         {courses.map((course) => (
           <button
             key={course}
-            className={activeCourses.includes(course) ? "active" : undefined}
+            className={activeCourses.includes(course) ? "active" : "inactive"}
             onClick={() =>
               setActiveCourses(
                 activeCourses.includes(course)
@@ -86,7 +86,9 @@ function App() {
         {countries.map((country) => (
           <button
             key={country}
-            className={activeCountries.includes(country) ? "active" : undefined}
+            className={
+              activeCountries.includes(country) ? "active" : "inactive"
+            }
             onClick={() =>
               setActiveCountries(
                 activeCountries.includes(country)
