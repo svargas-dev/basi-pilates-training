@@ -40,9 +40,9 @@ function App() {
     if (data) {
       if (activeCourses.length === 0) {
         setFilteredData(
-          data.filter((datum) =>
-            activeCountries.includes(datum.studio_country),
-          ),
+          data
+            .filter((datum) => activeCountries.includes(datum.studio_country))
+            .sort((a, b) => (a.studio_country < b.studio_country ? -1 : 1)),
         );
       }
       if (activeCountries.length === 0) {
