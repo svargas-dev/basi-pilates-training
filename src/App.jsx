@@ -67,26 +67,50 @@ function App() {
   }, [data, activeCountries, activeCourses]);
 
   useEffect(() => {
-    fetch("https://www.basipilates.com/wp-json/api/search/get/courses", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-      },
-      body: "data[0][name]=program&data[0][value]=Teacher+Training",
-    })
-      .then((response) => {
-        if (!response.ok) {
-          setError({ message: "😿" });
-        } else {
-          return response.json();
-        }
+    let localData = localStorage.getItem("data");
+    if (localData) {
+      const TWELVE_HOURS = 43200;
+      if (
+        Math.floor(Date.now() / 1000) - JSON.parse(localData).timestamp >
+        TWELVE_HOURS
+      ) {
+        localData = null;
+      } else {
+        setData(JSON.parse(localData).data);
+      }
+    }
+
+    if (!localData) {
+      fetch("https://www.basipilates.com/wp-json/api/search/get/courses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        },
+        body: "data[0][name]=program&data[0][value]=Teacher+Training",
       })
-      .then((data) => {
-        setData(data[0]);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+        .then((response) => {
+          if (!response.ok) {
+            setError({ message: "😿" });
+          } else {
+            return response.json();
+          }
+        })
+        .then((data) => {
+          if (!data[0]) return;
+
+          setData(data[0]);
+          localStorage.setItem(
+            "data",
+            JSON.stringify({
+              timestamp: Math.floor(Date.now() / 1000),
+              data: data[0],
+            }),
+          );
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    }
   }, []);
 
   return (
