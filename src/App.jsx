@@ -91,8 +91,11 @@ function App() {
 
   return (
     <>
-      <h1>BASI Pilates</h1>
-      <h2>Teacher Training Courses</h2>
+      <header>
+        <h1>BASI Pilates</h1>
+        <h2>Teacher Training Courses</h2>
+        <p>A very unofficial directory.</p>
+      </header>
 
       {!data && !error && <p>Loading...</p>}
       {!!error && <p>Fail: {error.message}</p>}
