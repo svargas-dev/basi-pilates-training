@@ -30,9 +30,13 @@ header {
   background: #242424d9;
 }
 
+summary {
+  margin-block: 1rem;
+}
 summary:hover {
   cursor: pointer;
 }
+
 .inactive {
   opacity: 0.8;
   transition: opacity 0.3s;

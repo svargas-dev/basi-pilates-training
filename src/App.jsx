@@ -169,25 +169,31 @@ function App() {
                 </button>
               ))}
           </div>
-          <h2>Number of studios: {filteredData?.length ?? 0}</h2>
+          <h2>Number of studios: {filteredData.length}</h2>
 
-          {filteredData.length > 0 &&
-            filteredData.map((datum) => (
-              <div key={datum.course_id} className="card">
-                <h3>{datum.studio_name}</h3>
-                <p>
-                  <em>{datum.program_name}</em>
-                </p>
-                <p>{datum.studio_city}</p>
-                <p>{datum.studio_country}</p>
-                <details>
-                  <summary>See all info</summary>
-                  <code>
-                    <pre>{JSON.stringify(cleanDatum(datum), null, 4)}</pre>
-                  </code>
-                </details>
-              </div>
-            ))}
+          {filteredData.map((datum) => (
+            <div key={datum.course_id} className="card">
+              <h3>{datum.studio_name}</h3>
+              <p>
+                <em>{datum.program_name}</em>
+              </p>
+              <p>{datum.studio_city}</p>
+              <p>{datum.studio_country}</p>
+              <a
+                href={`https://www.basipilates.com/courses/${datum.friendly_id}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                See course page
+              </a>
+              <details>
+                <summary>See raw info</summary>
+                <code>
+                  <pre>{JSON.stringify(cleanDatum(datum), null, 4)}</pre>
+                </code>
+              </details>
+            </div>
+          ))}
         </>
       )}
     </>
@@ -195,25 +201,7 @@ function App() {
 }
 
 const cleanDatum = (datum) => {
-  delete datum.course_id;
-  delete datum.licensee;
-  delete datum.licensee_user;
-  delete datum.program_id;
-  delete datum.studio_id;
-  delete datum.studio_friendly_id;
-  delete datum.friendly_id;
-  delete datum.register_url;
-  datum.modules = datum.modules
-    .filter((module) => {
-      const start = new Date(module.start);
-      const now = new Date();
-      return start >= now;
-    })
-    .map((module) => {
-      delete module.qualifications;
-      return module;
-    });
-  datum.faculty = datum.faculty.filter((faculty) => {
+  const faculty = datum.faculty.filter((faculty) => {
     delete faculty.city;
     delete faculty.locality;
     if (faculty.deleted === false) {
@@ -233,7 +221,23 @@ const cleanDatum = (datum) => {
     return faculty;
   });
 
-  return datum;
+  return {
+    modules: datum.modules
+      .filter((module) => {
+        const start = new Date(module.start);
+        const now = new Date();
+        return start >= now;
+      })
+      .map((module) => {
+        delete module.qualifications;
+        return {
+          start: module.start.split("T")[0],
+          end: module.end.split("T")[0],
+        };
+      }),
+    observed_at: datum.observed_at.split("T")[0],
+    faculty: faculty.length > 0 ? faculty : undefined,
+  };
 };
 
 function toKebabCase(str) {
