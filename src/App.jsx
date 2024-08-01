@@ -178,7 +178,7 @@ function App() {
             />{" "}
             Show started and past courses
           </label>
-          &emsp;
+          <br />
           <label>
             <input
               type="checkbox"
