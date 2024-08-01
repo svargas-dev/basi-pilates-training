@@ -171,29 +171,21 @@ function App() {
               ))}
           </div>
           <label>
-            Show unscheduled courses
             <input
               type="checkbox"
               checked={showUnscheduled}
               onChange={() => setShowUnscheduled(!showUnscheduled)}
-            />
+            />{" "}
+            Show unscheduled courses&emsp;
+            <sup>*only applicable to Comprehensive Global and variants</sup>
           </label>
 
           <h3>Number of studios: {filteredData.length}</h3>
 
           {filteredData.map((datum) => {
-            const {
-              has_scheduled_course,
-              may_have_scheduled_course,
-              ...moreInfo
-            } = cleanDatum(datum);
+            const { has_scheduled_course, ...moreInfo } = cleanDatum(datum);
 
-            if (
-              !showUnscheduled &&
-              !has_scheduled_course &&
-              !may_have_scheduled_course
-            )
-              return null;
+            if (!showUnscheduled && has_scheduled_course === false) return null;
 
             return (
               <div key={datum.course_id} className="card">
@@ -204,11 +196,6 @@ function App() {
                   {has_scheduled_course && (
                     <span className="badge">
                       <strong>Scheduled Course</strong>
-                    </span>
-                  )}
-                  {may_have_scheduled_course && (
-                    <span className="badge">
-                      <strong>May be scheduled</strong>
                     </span>
                   )}
                 </div>
@@ -259,10 +246,19 @@ const cleanDatum = (datum) => {
     return start >= now;
   }).length;
 
+  const isComprehensiveGlobal =
+    datum.program_name === "Comprehensive Global" ||
+    datum.program_name === "Comprehensive Global - Africa" ||
+    datum.program_name === "Comprehensive Global - Flex";
+
   return {
-    has_scheduled_course: numberOfFutureModules >= 12,
-    may_have_scheduled_course:
-      numberOfFutureModules >= 8 && numberOfFutureModules < 12,
+    has_scheduled_course: isComprehensiveGlobal
+      ? ((datum.program_name === "Comprehensive Global" ||
+          datum.program_name === "Comprehensive Global - Africa") &&
+          numberOfFutureModules === 12) ||
+        (datum.program_name === "Comprehensive Global - Flex" &&
+          numberOfFutureModules === 8)
+      : undefined,
     observed_at: datum.observed_at.split("T")[0],
     enable_conference_course: datum.enable_conference_course ? true : undefined,
     faculty: faculty.length > 0 ? faculty : undefined,
