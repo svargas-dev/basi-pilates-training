@@ -6,6 +6,8 @@ function App() {
   const [data, setData] = useState();
   const [error, setError] = useState();
 
+  console.log(data);
+
   const [filteredData, setFilteredData] = useState([]);
   const [activeCourses, setActiveCourses] = useState([]);
   const [activeCountries, setActiveCountries] = useState([]);
@@ -169,31 +171,49 @@ function App() {
                 </button>
               ))}
           </div>
-          <h2>Number of studios: {filteredData.length}</h2>
+          <h3>Number of studios: {filteredData.length}</h3>
+          <p>
+            ⚠ Courses may be still be scheduled when <em>Scheduled Course</em>{" "}
+            badge is missing (if they have less than 12 modules)
+          </p>
 
-          {filteredData.map((datum) => (
-            <div key={datum.course_id} className="card">
-              <h3>{datum.studio_name}</h3>
-              <p>
-                <em>{datum.program_name}</em>
-              </p>
-              <p>{datum.studio_city}</p>
-              <p>{datum.studio_country}</p>
-              <a
-                href={`https://www.basipilates.com/courses/${datum.friendly_id}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                See course page
-              </a>
-              <details>
-                <summary>See raw info</summary>
-                <code>
-                  <pre>{JSON.stringify(cleanDatum(datum), null, 4)}</pre>
-                </code>
-              </details>
-            </div>
-          ))}
+          {filteredData.map((datum) => {
+            const { has_scheduled_course, ...moreInfo } = cleanDatum(datum);
+
+            return (
+              <div key={datum.course_id} className="card">
+                <div className="courseDates">
+                  <p>
+                    <em>{datum.program_name}</em>
+                  </p>
+                  {has_scheduled_course && (
+                    <span className="badge">
+                      <strong>Scheduled Course</strong>
+                      <br />
+                    </span>
+                  )}
+                </div>
+
+                <h3>{datum.studio_name}</h3>
+                <p>
+                  {datum.studio_city}, {datum.studio_country}
+                </p>
+                <a
+                  href={`https://www.basipilates.com/courses/${datum.friendly_id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  See course page
+                </a>
+                <details>
+                  <summary>More info</summary>
+                  <code>
+                    <pre>{JSON.stringify(moreInfo, null, 4)}</pre>
+                  </code>
+                </details>
+              </div>
+            );
+          })}
         </>
       )}
     </>
@@ -201,41 +221,28 @@ function App() {
 }
 
 const cleanDatum = (datum) => {
-  const faculty = datum.faculty.filter((faculty) => {
-    delete faculty.city;
-    delete faculty.locality;
-    if (faculty.deleted === false) {
-      delete faculty.deleted;
-    }
-    delete faculty.country;
-    delete faculty.postal_code;
-    delete faculty.user;
-    delete faculty.address;
-    delete faculty.id;
-    delete faculty.qualifications;
-    delete faculty.title;
-    if (faculty.active === true) {
-      delete faculty.active;
-    }
+  const faculty = datum.faculty
+    .map((faculty) => {
+      if (faculty.deleted || !faculty.active) return undefined;
 
-    return faculty;
-  });
+      return {
+        name: faculty.name.split(" - Faculty")[0],
+        email: faculty.email,
+        active: faculty.active ? undefined : false,
+        deleted: faculty.deleted ? true : undefined,
+      };
+    })
+    .filter((f) => f);
 
   return {
-    modules: datum.modules
-      .filter((module) => {
+    has_scheduled_course:
+      datum.modules.filter((module) => {
         const start = new Date(module.start);
         const now = new Date();
         return start >= now;
-      })
-      .map((module) => {
-        delete module.qualifications;
-        return {
-          start: module.start.split("T")[0],
-          end: module.end.split("T")[0],
-        };
-      }),
+      }).length >= 12,
     observed_at: datum.observed_at.split("T")[0],
+    enable_conference_course: datum.enable_conference_course ? true : undefined,
     faculty: faculty.length > 0 ? faculty : undefined,
   };
 };
