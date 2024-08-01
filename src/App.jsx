@@ -9,7 +9,55 @@ function App() {
   const [filteredData, setFilteredData] = useState([]);
   const [activeCourses, setActiveCourses] = useState([]);
   const [activeCountries, setActiveCountries] = useState([]);
-  const [showUnscheduled, setShowUnscheduled] = useState(true);
+  const [showUnscheduled, setShowUnscheduled] = useState(false);
+  const [orderByDate, setOrderByDate] = useState(false);
+
+  useEffect(() => {
+    let localData = localStorage.getItem("data");
+    if (localData) {
+      const TWELVE_HOURS = 43200;
+      if (
+        Math.floor(Date.now() / 1000) - JSON.parse(localData).timestamp >
+        TWELVE_HOURS
+      ) {
+        localData = null;
+      } else {
+        setData(JSON.parse(localData).data);
+      }
+    }
+
+    if (!localData) {
+      fetch("https://www.basipilates.com/wp-json/api/search/get/courses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        },
+        body: "data[0][name]=program&data[0][value]=Teacher+Training",
+      })
+        .then((response) => {
+          if (!response.ok) {
+            setError({ message: "😿" });
+          } else {
+            return response.json();
+          }
+        })
+        .then((data) => {
+          if (!data[0]) return;
+
+          setData(data[0]);
+          localStorage.setItem(
+            "data",
+            JSON.stringify({
+              timestamp: Math.floor(Date.now() / 1000),
+              data: data[0],
+            }),
+          );
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    }
+  }, []);
 
   const courses = useMemo(
     () =>
@@ -67,53 +115,6 @@ function App() {
     }
   }, [data, activeCountries, activeCourses]);
 
-  useEffect(() => {
-    let localData = localStorage.getItem("data");
-    if (localData) {
-      const TWELVE_HOURS = 43200;
-      if (
-        Math.floor(Date.now() / 1000) - JSON.parse(localData).timestamp >
-        TWELVE_HOURS
-      ) {
-        localData = null;
-      } else {
-        setData(JSON.parse(localData).data);
-      }
-    }
-
-    if (!localData) {
-      fetch("https://www.basipilates.com/wp-json/api/search/get/courses", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        },
-        body: "data[0][name]=program&data[0][value]=Teacher+Training",
-      })
-        .then((response) => {
-          if (!response.ok) {
-            setError({ message: "😿" });
-          } else {
-            return response.json();
-          }
-        })
-        .then((data) => {
-          if (!data[0]) return;
-
-          setData(data[0]);
-          localStorage.setItem(
-            "data",
-            JSON.stringify({
-              timestamp: Math.floor(Date.now() / 1000),
-              data: data[0],
-            }),
-          );
-        })
-        .catch((error) => {
-          console.error(error);
-        });
-    }
-  }, []);
-
   return (
     <>
       <header>
@@ -148,7 +149,6 @@ function App() {
                 </button>
               ))}
           </div>
-
           <h3>Filter by country</h3>
           <div>
             {countries.length &&
@@ -174,52 +174,77 @@ function App() {
             <input
               type="checkbox"
               checked={showUnscheduled}
-              onChange={() => setShowUnscheduled(!showUnscheduled)}
+              onChange={(event) => setShowUnscheduled(event.target.checked)}
             />{" "}
-            Show unscheduled courses&emsp;
-            <sup>*only applicable to Comprehensive Global and variants</sup>
+            Show started and past courses
           </label>
-
+          &emsp;
+          <label>
+            <input
+              type="checkbox"
+              checked={orderByDate}
+              onChange={(event) => setOrderByDate(event.target.checked)}
+            />{" "}
+            Order by date
+          </label>
           <h3>Number of studios: {filteredData.length}</h3>
+          {filteredData
+            .sort((a, b) =>
+              orderByDate
+                ? new Date(a.observed_at) - new Date(b.observed_at)
+                : 0,
+            )
+            .map((datum) => {
+              const { has_scheduled_course, start_date, ...moreInfo } =
+                cleanDatum(datum);
+              if (!showUnscheduled && has_scheduled_course === false)
+                return null;
 
-          {filteredData.map((datum) => {
-            const { has_scheduled_course, ...moreInfo } = cleanDatum(datum);
+              const start = new Date(start_date);
+              return (
+                <div key={datum.course_id} className="card">
+                  <div className="courseDates">
+                    <p>
+                      <em>{datum.program_name}</em>
+                    </p>
+                    {has_scheduled_course && (
+                      <span className="badge scheduled">
+                        <strong>
+                          {start.toLocaleDateString(undefined, {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </strong>
+                      </span>
+                    )}
+                    {!has_scheduled_course && (
+                      <span className="badge past">
+                        {start.toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
 
-            if (!showUnscheduled && has_scheduled_course === false) return null;
-
-            return (
-              <div key={datum.course_id} className="card">
-                <div className="courseDates">
+                  <h3>{datum.studio_name}</h3>
                   <p>
-                    <em>{datum.program_name}</em>
+                    {datum.studio_city}, {datum.studio_country}
                   </p>
-                  {has_scheduled_course && (
-                    <span className="badge">
-                      <strong>Scheduled Course</strong>
-                    </span>
-                  )}
+                  <a
+                    href={`https://www.basipilates.com/courses/${datum.friendly_id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    See course page
+                  </a>
+                  <details>
+                    <summary>More info</summary>
+                    <code>
+                      <pre>{JSON.stringify(moreInfo, null, 4)}</pre>
+                    </code>
+                  </details>
                 </div>
-
-                <h3>{datum.studio_name}</h3>
-                <p>
-                  {datum.studio_city}, {datum.studio_country}
-                </p>
-                <a
-                  href={`https://www.basipilates.com/courses/${datum.friendly_id}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  See course page
-                </a>
-                <details>
-                  <summary>More info</summary>
-                  <code>
-                    <pre>{JSON.stringify(moreInfo, null, 4)}</pre>
-                  </code>
-                </details>
-              </div>
-            );
-          })}
+              );
+            })}
         </>
       )}
     </>
@@ -240,26 +265,13 @@ const cleanDatum = (datum) => {
     })
     .filter((f) => f);
 
-  const numberOfFutureModules = datum.modules.filter((module) => {
-    const start = new Date(module.start);
-    const now = new Date();
-    return start >= now;
-  }).length;
-
-  const isComprehensiveGlobal =
-    datum.program_name === "Comprehensive Global" ||
-    datum.program_name === "Comprehensive Global - Africa" ||
-    datum.program_name === "Comprehensive Global - Flex";
-
   return {
-    has_scheduled_course: isComprehensiveGlobal
-      ? ((datum.program_name === "Comprehensive Global" ||
-          datum.program_name === "Comprehensive Global - Africa") &&
-          numberOfFutureModules === 12) ||
-        (datum.program_name === "Comprehensive Global - Flex" &&
-          numberOfFutureModules === 8)
-      : undefined,
-    observed_at: datum.observed_at.split("T")[0],
+    has_scheduled_course: (() => {
+      const start = new Date(datum.observed_at);
+      const now = new Date();
+      return start >= now;
+    })(),
+    start_date: datum.observed_at,
     enable_conference_course: datum.enable_conference_course ? true : undefined,
     faculty: faculty.length > 0 ? faculty : undefined,
   };

@@ -54,13 +54,21 @@ summary:hover {
 }
 
 .badge {
-  background: #006;
   color: white;
   padding: 0.2rem 0.5rem;
   border-radius: 0.2rem;
   opacity: 0.7;
   font-size: 0.667rem;
   text-align: right;
+}
+
+.badge.scheduled {
+  background: #006;
+}
+
+.badge.past {
+  background: #666;
+  opacity: 0.5;
 }
 
 .courseDates {
