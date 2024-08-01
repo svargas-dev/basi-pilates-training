@@ -236,12 +236,14 @@ function App() {
                   >
                     See course page
                   </a>
-                  <details>
-                    <summary>More info</summary>
-                    <code>
-                      <pre>{JSON.stringify(moreInfo, null, 4)}</pre>
-                    </code>
-                  </details>
+                  {moreInfo.faculty && (
+                    <details>
+                      <summary>Teaching staff</summary>
+                      <code>
+                        <pre>{JSON.stringify(moreInfo.faculty, null, 4)}</pre>
+                      </code>
+                    </details>
+                  )}
                 </div>
               );
             })}
