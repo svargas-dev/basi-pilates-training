@@ -175,19 +175,19 @@ function App() {
               type="checkbox"
               checked={showUnscheduled}
               onChange={(event) => setShowUnscheduled(event.target.checked)}
-            />{" "}
-            Show started and past courses
+            />
+            &ensp;Show started and past courses
           </label>
-          <br />
           <label>
             <input
               type="checkbox"
               checked={orderByDate}
               onChange={(event) => setOrderByDate(event.target.checked)}
-            />{" "}
-            Order by date
+            />
+            &ensp;Order by date
           </label>
           <h3>Number of studios: {filteredData.length}</h3>
+
           {filteredData
             .sort((a, b) =>
               orderByDate
@@ -220,7 +220,11 @@ function App() {
                     )}
                     {!has_scheduled_course && (
                       <span className="badge past">
-                        {start.toLocaleDateString()}
+                        {start.toLocaleDateString(undefined, {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        })}
                       </span>
                     )}
                   </div>
@@ -239,9 +243,29 @@ function App() {
                   {moreInfo.faculty && (
                     <details>
                       <summary>Teaching staff</summary>
-                      <code>
-                        <pre>{JSON.stringify(moreInfo.faculty, null, 4)}</pre>
-                      </code>
+                      {moreInfo.faculty.map(({ name, email }, index) => (
+                        <div
+                          key={`${toKebabCase(name)}-${index}`}
+                          className="staff"
+                        >
+                          <a
+                            href={`mailto:honeyheresmypot@nowhere.com`}
+                            className="sr-only"
+                            aria-hidden
+                          >
+                            Email {name}
+                          </a>
+                          <a
+                            href=""
+                            onClick={(event) => {
+                              event.target.href = `mailto:${email}`;
+                              event.target.click();
+                            }}
+                          >
+                            {name}
+                          </a>
+                        </div>
+                      ))}
                     </details>
                   )}
                 </div>
