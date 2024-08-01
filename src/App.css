@@ -14,6 +14,11 @@ header {
   margin-block-end: 2.5rem;
 }
 
+input {
+  margin-block-start: 3rem;
+  margin-block-end: 2rem;
+}
+
 .card {
   position: relative;
   background: #242424e3;

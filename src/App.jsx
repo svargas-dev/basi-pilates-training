@@ -6,11 +6,10 @@ function App() {
   const [data, setData] = useState();
   const [error, setError] = useState();
 
-  console.log(data);
-
   const [filteredData, setFilteredData] = useState([]);
   const [activeCourses, setActiveCourses] = useState([]);
   const [activeCountries, setActiveCountries] = useState([]);
+  const [showUnscheduled, setShowUnscheduled] = useState(true);
 
   const courses = useMemo(
     () =>
@@ -171,14 +170,30 @@ function App() {
                 </button>
               ))}
           </div>
+          <label>
+            Show unscheduled courses
+            <input
+              type="checkbox"
+              checked={showUnscheduled}
+              onChange={() => setShowUnscheduled(!showUnscheduled)}
+            />
+          </label>
+
           <h3>Number of studios: {filteredData.length}</h3>
-          <p>
-            ⚠ Courses may be still be scheduled when <em>Scheduled Course</em>{" "}
-            badge is missing (if they have less than 12 modules)
-          </p>
 
           {filteredData.map((datum) => {
-            const { has_scheduled_course, ...moreInfo } = cleanDatum(datum);
+            const {
+              has_scheduled_course,
+              may_have_scheduled_course,
+              ...moreInfo
+            } = cleanDatum(datum);
+
+            if (
+              !showUnscheduled &&
+              !has_scheduled_course &&
+              !may_have_scheduled_course
+            )
+              return null;
 
             return (
               <div key={datum.course_id} className="card">
@@ -189,6 +204,12 @@ function App() {
                   {has_scheduled_course && (
                     <span className="badge">
                       <strong>Scheduled Course</strong>
+                      <br />
+                    </span>
+                  )}
+                  {may_have_scheduled_course && (
+                    <span className="badge">
+                      <strong>May be scheduled</strong>
                       <br />
                     </span>
                   )}
@@ -234,13 +255,16 @@ const cleanDatum = (datum) => {
     })
     .filter((f) => f);
 
+  const numberOfFutureModules = datum.modules.filter((module) => {
+    const start = new Date(module.start);
+    const now = new Date();
+    return start >= now;
+  }).length;
+
   return {
-    has_scheduled_course:
-      datum.modules.filter((module) => {
-        const start = new Date(module.start);
-        const now = new Date();
-        return start >= now;
-      }).length >= 12,
+    has_scheduled_course: numberOfFutureModules >= 12,
+    may_have_scheduled_course:
+      numberOfFutureModules >= 8 && numberOfFutureModules < 12,
     observed_at: datum.observed_at.split("T")[0],
     enable_conference_course: datum.enable_conference_course ? true : undefined,
     faculty: faculty.length > 0 ? faculty : undefined,
