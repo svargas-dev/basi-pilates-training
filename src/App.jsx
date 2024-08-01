@@ -192,7 +192,7 @@ function App() {
             .sort((a, b) =>
               orderByDate
                 ? new Date(a.observed_at) - new Date(b.observed_at)
-                : 0,
+                : a.studio_country > b.studio_country,
             )
             .map((datum) => {
               const { has_scheduled_course, start_date, ...moreInfo } =
