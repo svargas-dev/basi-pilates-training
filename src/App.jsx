@@ -204,13 +204,11 @@ function App() {
                   {has_scheduled_course && (
                     <span className="badge">
                       <strong>Scheduled Course</strong>
-                      <br />
                     </span>
                   )}
                   {may_have_scheduled_course && (
                     <span className="badge">
                       <strong>May be scheduled</strong>
-                      <br />
                     </span>
                   )}
                 </div>
